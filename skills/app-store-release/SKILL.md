@@ -9,31 +9,38 @@ Use this skill when a user asks to release an iOS app to the App Store, or to co
 
 Do not use it for a TestFlight-only build, a single unrelated App Store Connect edit, or a non-iOS App Store distribution workflow.
 
-## Establish The Release Model
+## Team Release Model
 
-Before changing source, configuration, App Store Connect, or Git state, inspect the target project's release instructions and current repository state. Identify:
+All iOS applications that use this skill follow this release model:
 
-- the target version, source branch, and the project's release model;
+- `develop` is the beta line. Beta builds use `*` in their display name and `.beta` in their bundle identifier, with corresponding beta or test service and storage configuration where applicable.
+- `release/x.y` is the temporary production-release branch. Before building or uploading from it, remove the beta markers and use the production configuration.
+- `main` receives the released production state. After release finalization, `develop` keeps the released code but restores its beta-only configuration by reverting only the production-configuration commit.
+- A project may have no widget. When it does, the widget must use the same environment-specific identifier convention as its parent app: the beta widget belongs to the beta parent identifier, and the production widget belongs to the production parent identifier.
+
+Before changing source, configuration, App Store Connect, or Git state, inspect the target project's release instructions and current repository state. Confirm:
+
+- the target version and the expected `release/x.y` branch;
 - the app target and every shipped extension or companion target;
-- the project's production versus development or beta configuration mechanism;
+- the project-specific source of its beta and production configuration;
 - the configured build or archive validation command; and
 - which actions the user has authorized for this release.
 
-Do not assume branch names, a Git Flow model, beta suffixes, bundle identifier patterns, store names, or a particular configuration-file layout. Preserve unrelated working-tree changes and do not treat a clean tree as implicit.
+Do not assume the configuration-file layout, the exact beta service or storage settings, or that an extension exists. Preserve unrelated working-tree changes and do not treat a clean tree as implicit.
 
 ## Prepare The Production Build
 
 Read the actual project configuration before editing it. Change the smallest shared configuration source that correctly affects the release, following project conventions.
 
-Check the release version and all user-visible and distribution-critical settings that apply to the project, such as:
+On `release/x.y`, check the release version and all user-visible and distribution-critical settings that apply to the project, such as:
 
 - marketing and build versions;
-- bundle identifiers and parent-child identifier relationships;
-- display names and localized names;
-- release, beta, staging, feature-flag, service, or storage configuration; and
+- bundle identifiers without `.beta`, including parent-child identifier relationships;
+- display names and localized names without `*`;
+- production service or storage configuration instead of beta or test configuration; and
 - target membership and signing or export configuration required by the project's archive process.
 
-Verify that all shipped targets form a coherent production build. Do not remove a development marker merely because it exists; first establish whether it is intentionally retained for the release model.
+If the project includes a widget, verify that its production identifier matches the production parent-app namespace. Verify that all shipped targets form a coherent production build.
 
 Run the project's prescribed local build or archive validation after configuration changes and before App Store Connect work. If validation is blocked by the local environment, report the exact limitation and the configuration evidence already checked; do not claim the build is verified.
 
@@ -56,11 +63,16 @@ Uploading a build, adding a version to review, submitting it for review, and rel
 
 ## Repository Follow-Up
 
-After the user confirms the build and the requested App Store submission stage is complete, follow the repository's documented release model. Inspect the commit history before choosing a merge, tag, rollback, push, or branch-cleanup operation.
+After the user confirms the build and the requested App Store submission stage is complete, finish the release using the team model. Inspect the commit history first to identify the production-configuration commit and avoid reverting feature or fix commits.
 
-For repositories that use a temporary release branch, the usual sequence is to merge the released work into the stable branch, tag it according to repository convention, bring release fixes back to the development branch, and restore only the development-only configuration that the release required to change. This is a pattern, not a universal command sequence: retain project-specific work that belongs on the development branch.
+1. Merge `release/x.y` into `main`.
+2. Tag the release using the repository's established version format.
+3. Merge or fast-forward the release work into `develop`.
+4. Revert only the production-configuration commit on `develop` so its `*`, `.beta`, and related beta configuration return.
+5. Push `main`, `develop`, and the tag, then verify the remote refs.
+6. Delete the finished local and remote `release/x.y` branch unless the user asks to retain it.
 
-Pushing refs, deleting local or remote branches, and creating tags change shared repository state. Do these only when the user has requested the corresponding release finalization, and verify remote state afterward.
+Pushing refs, deleting local or remote branches, and creating tags change shared repository state. Do these only when the user has requested the corresponding release finalization.
 
 ## Completion Report
 
