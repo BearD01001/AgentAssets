@@ -1,0 +1,54 @@
+# 复制到产品工作区后填写；这是制作简报，不是特定渲染器的配置协议。
+product:
+  name: ""
+  website: ""
+  version: ""
+  audience: ""
+  current_features: []
+  new_features_missing_from_old_marketing: []
+  facts_and_sources: [] # 记录 URL/版本/相关原文，不包含账号或密钥。
+
+inputs:
+  captures_directory: ""
+  ui_language: ""
+  capture_source: "user-selected" # 或 authorized-simulator
+  simulator_devices: [] # 以本机实际可用设备为准。
+  demo_data_notes: "仅虚构数据；分类数量、名称、文档长度与封面有自然差异。"
+
+creative:
+  base_locale: "zh-Hans"
+  additional_locales: ["en-US", "zh-Hant"]
+  approved_reference: ""
+  theme: "light"
+  style: "浅色蓝青紫渐变、可见柔光轨道、稀疏粒子、真实截图叠层"
+  typography: "现代无衬线；不同语言重新排版"
+  approval_stage: "base-locale-first" # 按用户要求决定是否分阶段定稿。
+
+pages:
+  - order: 1
+    feature: ""
+    evidence: ""
+    headline: ""
+    supporting_copy: ""
+    capture_files: []
+    actual_capture_content: ""
+    composition: "hero-with-detail" # 也可 aligned-mask / paired / unlock / wide
+    missing_capture: ""
+  # 按实际卖点添加页面；页数和设备不固定。
+
+exports:
+  output_directory: ""
+  editable_source: ""
+  color_space: "sRGB"
+  format: "PNG without alpha"
+  targets: [] # 每项记录 locale、当前 ASC 栏位、像素宽高、方向、页序。
+  preserve_originals: true
+
+upload:
+  requested: false
+  target_app: ""
+  target_version: ""
+  scope: "screenshots-only"
+  replace_existing: false # 记录用户已授权的替换范围。
+  submit_for_review: false
+  verification: "实际预览逐张加载、顺序正确、保存后切换语言或刷新读回"

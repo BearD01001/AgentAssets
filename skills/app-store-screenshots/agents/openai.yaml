@@ -1,0 +1,4 @@
+interface:
+  display_name: "App Store 上架图片"
+  short_description: "从产品介绍和真实截图制作现代上架图片，支持多语言、尺寸适配与上传核验"
+  default_prompt: "使用 $app-store-screenshots 为我的产品制作 App Store 上架图片，先阅读产品介绍并完成首个语言的视觉定稿，再按需适配其他语言和上传。"
