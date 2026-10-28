@@ -1,11 +1,11 @@
 ---
 name: app-store-release
-description: Prepare and complete a conventional iOS App Store release, including project release checks, App Store Connect metadata, review authorization boundaries, and repository release follow-up.
+description: Prepare, complete, or finalize an iOS App Store release, including production configuration, App Store Connect metadata, review authorization boundaries, Git release finalization, and cleanup of release branches and temporary artifacts.
 ---
 
 # App Store Release
 
-Use this skill when a user asks to release an iOS app to the App Store, or to continue an existing release toward App Store submission. It covers project preparation, App Store Connect metadata, submission support, and repository follow-up.
+Use this skill when a user asks to release an iOS app to the App Store, continue an existing release toward App Store submission, or finish and clean up a release. It covers project preparation, App Store Connect metadata, submission support, and repository follow-up.
 
 Do not use it for a TestFlight-only build, a single unrelated App Store Connect edit, or a non-iOS App Store distribution workflow.
 
@@ -27,6 +27,8 @@ Before changing source, configuration, App Store Connect, or Git state, inspect 
 - which actions the user has authorized for this release.
 
 Do not assume the configuration-file layout, the exact beta service or storage settings, or that an extension exists. Preserve unrelated working-tree changes and do not treat a clean tree as implicit.
+
+Track the branches, worktrees, and temporary files or directories created for this release, including those created outside the repository. Prefer a dedicated temporary directory for disposable build output, logs, downloads, and metadata drafts so cleanup can identify them reliably. Record any artifacts the user asks to keep.
 
 ## Prepare The Production Build
 
@@ -63,16 +65,34 @@ Uploading a build, adding a version to review, submitting it for review, and rel
 
 ## Repository Follow-Up
 
-After the user confirms the build and the requested App Store submission stage is complete, finish the release using the team model. Inspect the commit history first to identify the production-configuration commit and avoid reverting feature or fix commits.
+Run release finalization and cleanup when either condition applies:
+
+- The user explicitly asks to finish, wrap up, or clean up the release, including requests such as “收尾”, “结束发布”, or “清理发布分支”.
+- The requested release workflow has reached its agreed App Store endpoint and the build has been confirmed. For a submission workflow, this means successful submission for review; wait for public availability only when that is the requested endpoint.
+
+An end-to-end release request includes this repository finalization and cleanup once that endpoint is reached. Do not require a second request to delete the release branch or remove disposable artifacts. A request limited to preparation, metadata, or inspection does not authorize an App Store submission or expand into a full release. An explicit cleanup request authorizes cleanup of completed release work, not an unrequested submission, release, or merge of unfinished work.
+
+Inspect local and remote refs and the previous completed release before making changes. Determine the established tag format from the release history, not a truncated list or a single exceptional tag. Identify the production-configuration commit and avoid reverting feature or fix commits. Resume from the actual state: do not repeat completed merges, create duplicate tags, or change an existing correct tag.
 
 1. Merge `release/x.y` into `main`.
-2. Tag the release using the repository's established version format.
-3. Merge or fast-forward the release work into `develop`.
+2. Point the release tag directly at that existing production-release merge commit on `main`, using the repository's established version format (commonly `vX.Y`). Do not create an empty commit just for the tag, or point it at a later beta-restoration commit. Verify that its tree matches the released source.
+3. Merge or fast-forward `main` into `develop` so the production-release merge commit and its tag are included in `develop`'s history as well.
 4. Revert only the production-configuration commit on `develop` so its `*`, `.beta`, and related beta configuration return.
 5. Push `main`, `develop`, and the tag, then verify the remote refs.
-6. Delete the finished local and remote `release/x.y` branch unless the user asks to retain it.
+6. Complete the cleanup below unless the user explicitly asks to retain particular branches or artifacts.
 
-Pushing refs, deleting local or remote branches, and creating tags change shared repository state. Do these only when the user has requested the corresponding release finalization.
+### Cleanup Scope And Completion
+
+Treat cleanup as part of finalization, not an optional offer after reporting the release complete:
+
+- Remove the finished local and remote `release/x.y` branch and any other temporary branches created for this release after verifying their required changes are included in the retained release history. Preserve the release tag. Do not infer that every historical `release/*` branch or similarly named file belongs to this release.
+- Remove temporary worktrees created for this release after their changes are integrated or preserved. Use the environment's managed-worktree archive mechanism when available. Switch the primary checkout to `develop` before deleting its release branch.
+- Remove disposable release output created by this task, such as temporary build or DerivedData directories, exported upload copies, downloaded diagnostic files, scratch scripts, logs, and metadata drafts, wherever the task created them. Preserve source files, reusable screenshot artwork, requested deliverables, and the final release record or submission evidence. Do not delete the sole retained signed archive or symbols needed to reproduce or diagnose the release.
+- Clean only artifacts attributable to this release. Inspect uncertain or modified artifacts before deleting them; preserve unmerged work and user-created files. Do not use a repository-wide clean, a broad wildcard deletion, or history rewriting as a cleanup shortcut.
+
+Before declaring finalization complete, verify that `main` and its remote contain the production release, the remote tag points to the intended existing commit, `develop` and its remote include that commit and retain beta configuration, and the finished release branches are absent locally and remotely. Check for remaining task-created worktrees and disposable files, and confirm that the working tree has no changes introduced by this task.
+
+If a specific artifact cannot be safely removed or an operation fails, complete the independent cleanup and report the exact remaining item and reason. Do not silently retain release branches or temporary output, or describe partial cleanup as complete.
 
 ## Completion Report
 
@@ -81,6 +101,6 @@ Summarize only the release facts that were verified:
 - version, branch, and production-build validation result;
 - App Store Connect metadata and build status;
 - whether review submission or release was actually performed; and
-- repository refs pushed, configuration restored, and release branches retained or removed.
+- repository refs pushed, the tag's target commit, configuration restored, release branches removed, and temporary artifacts cleaned or explicitly retained.
 
 Separate local preparation from changes already made in App Store Connect or the remote repository. Name any remaining manual confirmation or authorization.
