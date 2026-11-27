@@ -94,13 +94,23 @@ Before declaring finalization complete, verify that `main` and its remote contai
 
 If a specific artifact cannot be safely removed or an operation fails, complete the independent cleanup and report the exact remaining item and reason. Do not silently retain release branches or temporary output, or describe partial cleanup as complete.
 
+## Bear.Best Website Changelog Sync
+
+After a production release is finalized (not for preparation-only runs or TestFlight builds), update the product's changelog in the local `Bear.Best` website repository:
+
+1. **Locate `Bear.Best` dynamically** (do not hardcode an absolute path): search relative to the current repository root across sibling directories and up to two directory levels above or below (e.g., `../Bear.Best`, `../../Bear.Best`, or nearby directories) for a repository containing both `src/data/productChangelog.ts` and `.ctxpm/packages/skills/add-product-changelog/SKILL.md`.
+2. **Verify product registration**: inspect `src/data/productChangelog.ts` in `Bear.Best` to confirm the current app is registered. If the product is not registered yet, note that in the completion report and skip without modifying `productChangelog.ts`.
+3. **Follow `Bear.Best`'s `add-product-changelog` skill**: read and follow `<Bear.Best>/.ctxpm/packages/skills/add-product-changelog/SKILL.md` using the released version and the finalized release notes from this release. Keep `Bear.Best`'s review and confirmation gate intact before committing, cherry-picking to `main`, and pushing.
+4. If the local `Bear.Best` repository cannot be found, or if its working tree/branch state blocks the update, report the exact reason in the completion report instead of failing the app release.
+
 ## Completion Report
 
 Summarize only the release facts that were verified:
 
 - version, branch, and production-build validation result;
 - App Store Connect metadata and build status;
-- whether review submission or release was actually performed; and
-- repository refs pushed, the tag's target commit, configuration restored, release branches removed, and temporary artifacts cleaned or explicitly retained.
+- whether review submission or release was actually performed;
+- repository refs pushed, the tag's target commit, configuration restored, release branches removed, and temporary artifacts cleaned or explicitly retained; and
+- `Bear.Best` website changelog sync status (updated/pushed, awaiting confirmation, skipped because unregistered, or blocked with reason).
 
 Separate local preparation from changes already made in App Store Connect or the remote repository. Name any remaining manual confirmation or authorization.
